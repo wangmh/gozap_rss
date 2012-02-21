@@ -2,6 +2,9 @@
 
 require 'rubygems'
 require 'bundler'
+$:.unshift File.join(File.dirname(__FILE__), 'lib')
+require 'gozap_rss/version'
+
 begin
   Bundler.setup(:default, :development)
 rescue Bundler::BundlerError => e
@@ -17,10 +20,13 @@ Jeweler::Tasks.new do |gem|
   gem.name = "gozap_rss"
   gem.homepage = "http://github.com/wangmh/gozap_rss"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{gozap公司用来抓取rss的服务}
+  gem.description = %Q{抓取RSS服务的简单应用}
   gem.email = "wangmh.bit@gmail.com"
   gem.authors = ["王明华"]
+  gem.version = GozapRss::VERSION
+  gem.files = FileList['lib/**/*.rb', '[A-Z]*', 'spec/**/*'].to_a
+
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
@@ -38,10 +44,9 @@ end
 
 task :default => :spec
 
-require 'rake/rdoctask'
+require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
-  version = File.exist?('VERSION') ? File.read('VERSION') : ""
-
+  version =   GozapRss::VERSION
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "gozap_rss #{version}"
   rdoc.rdoc_files.include('README*')
