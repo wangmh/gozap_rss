@@ -9,6 +9,7 @@ require 'rss/2.0'
 require 'open-uri'
 require "digest/md5"
 require "sanitize"
+require "typhoeus"
 
 
 

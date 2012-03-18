@@ -6,7 +6,7 @@ source "http://rubygems.org"
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 gem "logger"
-
+gem "typhoeus"
 gem "sanitize", ">=2.0.3"
 
 
