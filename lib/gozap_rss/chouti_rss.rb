@@ -126,8 +126,8 @@ module GozapRss
 
     private
     def validate
-      !(@url.nil? || @description.nil? || @title.nil? ||
-          @url.empty? || @description.empty? || @title.empty?)
+      !(@url.nil? || @title.nil? ||
+          @url.empty? ||  @title.empty?)
     end
 
   end
