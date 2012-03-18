@@ -41,6 +41,7 @@ module GozapRss
       @@logger = logger
     end
   end
+
 end
 
 
