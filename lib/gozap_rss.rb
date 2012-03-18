@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'logger'
 require 'json'
-require "mysql2"
 require 'kconv'
 require 'iconv'
 require 'rss/1.0'

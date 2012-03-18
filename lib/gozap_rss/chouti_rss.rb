@@ -2,6 +2,26 @@
 
 module GozapRss
 
+  class Error < StandardError; end
+
+  class GozapHttpTimeOutError < Error
+    def initialize(url)
+      super("http get #{url} get timeout")
+    end
+  end
+
+  class GozapHttpStatusError < Error
+    def initialize(url, code, msg)
+      super("http get #{url} return response_code is #{code} and error is #{msg}")
+    end
+  end
+
+  class GozapHttpReceiveError < Error
+    def initialize(url, msg)
+      super("http get #{url} error is #{msg}")
+    end
+  end
+
 
   class ChoutiRssBase
     def self.logger
@@ -41,7 +61,7 @@ module GozapRss
 
   class ChoutiRss < ChoutiRssBase
 
-    attr_reader :rss_items
+    attr_reader :items
 
     def initialize uri
       @http_headers_option = {"User-Agent" => "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7"}
@@ -60,14 +80,12 @@ module GozapRss
         rss = RSS::Parser.parse(content, false)
         @title = rss.channel.title.to_s.html_format
         @description = rss.channel.description.to_s.html_format
-        @pub_date = rss.channel.pubDate
-        @ttl = rss.channel.ttl.to_i == 0 ? 10 * 60 : rss.channel.ttl.to_i * 60
-        @rss_items = []
+        @ttl = (rss.channel.respond_to?(:ttl) && rss.channel.ttl.to_i > 0) ?  rss.channel.ttl.to_i * 60 : 2 * 60
+        @items = []
         rss.items.each do |item|
           rss_item = ChoutiRssItem.new(item)
-          @rss_items << rss_item if rss_item
+          @items << rss_item if rss_item
         end
-        @rss_items.sort! { |a, b| b.pub_date <=>a.pub_date }
       rescue Exception => e
         logger_exception e
       end
@@ -79,6 +97,7 @@ module GozapRss
     def get_feed_content uri
 
       content = ""
+      @retry = 3
       begin
         response = Typhoeus::Request.get(uri,
                                          :headers['User-Agent'] => "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.7"\
@@ -90,15 +109,23 @@ module GozapRss
 
         if response.success? || (response.code < 400 && response.code >= 301)
           content = response.body
-          isutf8 = Kconv.isutf8(content)
-          content = Iconv.iconv("UTF-8//IGNORE", "GB2312//IGNORE", content)[0] unless isutf8
+          #isutf8 = Kconv.isutf8(content)
+          #content = content.encode("UTF-8", "GB2312")    unless isutf8
         elsif response.timed_out?
-          log_failed response
+          raise GozapHttpTimeOutError.new(uri)
         elsif response.code == 0
-          log_failed(response)
+          raise GozapHttpReceiveError.new(uri,response.curl_error_message)
         else
-          log_failed(response)
+          rails GozapHttpStatusError.new(uri, response.code, response.curl_error_message)
         end
+      rescue GozapHttpTimeOutError => e
+        logger_exception e
+        logger.info "#{@retry} #{uri}"
+        retry if  (@retry -= 1) > 0
+      rescue GozapHttpReceiveError => e
+        logger_exception e
+        logger.info "retry #{@retry} #{uri}"
+        retry if  (@retry -= 1) > 0
       rescue Exception => e
         logger_exception e
       end
@@ -109,15 +136,13 @@ module GozapRss
 
 
   class ChoutiRssItem < ChoutiRssBase
-    attr_reader :url_md5
 
     def initialize item
       @title = item.title.to_s.html_format
       @description = item.description.to_s.html_format
       @url = item.link.to_s.strip
-      @url_md5 = Digest::MD5.hexdigest(@url)
       unless validate
-        logger.error "parser item error -- title=>#{@title}, pub_date=>#{@pub_date} description=>#{@description}, url=>#{@url}"
+        logger.error "parser item error -- title=>#{@title},  url=>#{@url}"
         return nil
       end
       self
