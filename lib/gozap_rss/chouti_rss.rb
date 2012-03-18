@@ -113,7 +113,6 @@ module GozapRss
 
     def initialize item
       @title = item.title.to_s.html_format
-      @pub_date = item.pubDate || item.lastBuildDate
       @description = item.description.to_s.html_format
       @url = item.link.to_s.strip
       @url_md5 = Digest::MD5.hexdigest(@url)
