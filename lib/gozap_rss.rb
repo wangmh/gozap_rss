@@ -43,14 +43,7 @@ module GozapRss
   end
 end
 
-rss = GozapRss::ChoutiRss.new("http://blog.sina.com.cn/rss/aochuge.xml")
-rss.rss_items.each_with_index do |item, index|
-  puts "#{index}---------"
-  puts item.url + "=>"   +   item.pub_date.to_s
-  puts item.title
-  puts item.description
-  puts ""
-end
+
 
 
 
