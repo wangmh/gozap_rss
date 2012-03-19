@@ -66,7 +66,8 @@ module GozapRss
     def initialize uri
       @http_headers_option = {"User-Agent" => "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7"}
       @url = uri
-      @rss_items = []
+      @items = []
+      @ttl = 120
       content = get_feed_content uri
       parse_rss(content)
     end
@@ -80,8 +81,7 @@ module GozapRss
         rss = RSS::Parser.parse(content, false)
         @title = rss.channel.title.to_s.html_format
         @description = rss.channel.description.to_s.html_format
-        @ttl = (rss.channel.respond_to?(:ttl) && rss.channel.ttl.to_i > 0) ?  rss.channel.ttl.to_i * 60 : 2 * 60
-        @items = []
+        @ttl =  rss.channel.ttl.to_i * 60 if (rss.channel.respond_to?(:ttl) && rss.channel.ttl.to_i > 0)
         rss.items.each do |item|
           rss_item = ChoutiRssItem.new(item)
           @items << rss_item if rss_item
@@ -102,7 +102,7 @@ module GozapRss
         response = Typhoeus::Request.get(uri,
                                          :headers['User-Agent'] => "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.7"\
                                                     "(KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7",
-                                         :timeout => 120000,
+                                         :timeout => 30000,
                                          :max_redirects => 3,
                                          :follow_location => true
         )
