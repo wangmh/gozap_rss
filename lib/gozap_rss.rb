@@ -1,14 +1,9 @@
 require 'rubygems'
 require 'logger'
-require 'json'
-require 'kconv'
-require 'iconv'
 require 'rss/1.0'
 require 'rss/2.0'
-require 'open-uri'
-require "digest/md5"
 require "sanitize"
-require "typhoeus"
+require "open-uri"
 
 
 
